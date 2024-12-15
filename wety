@@ -1,0 +1,33 @@
+const { ethers } = require("ethers");
+
+// Set up your provider (use Infura or Alchemy URL here)
+const provider = new ethers.JsonRpcProvider("https://mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID");
+
+async function getAverageGasFee() {
+    // Get the latest block number
+    const latestBlockNumber = await provider.getBlockNumber();
+    let totalGasFee = 0;
+    let totalTransactions = 0;
+
+    // Loop over the last 100 blocks
+    for (let blockNumber = latestBlockNumber; blockNumber > latestBlockNumber - 100; blockNumber--) {
+        const block = await provider.getBlockWithTransactions(blockNumber);
+        
+        for (const tx of block.transactions) {
+            const gasUsed = tx.gasLimit.toNumber();
+            const gasPrice = tx.gasPrice.toNumber();
+            const transactionFee = gasUsed * gasPrice;
+
+            totalGasFee += transactionFee;
+            totalTransactions++;
+        }
+    }
+
+    // Calculate the average gas fee
+    const averageGasFee = totalGasFee / totalTransactions;
+
+    // Print the result
+    console.log(`Average gas fee over the last 100 blocks: ${ethers.utils.formatUnits(averageGasFee, 'gwei')} Gwei`);
+}
+
+getAverageGasFee().catch(console.error);
